@@ -1,41 +1,57 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, button, div, text)
+import Entity.Entity exposing (Snake, initialSnake)
+import Html exposing (Html, div, text)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+
+
 
 -- MAIN
 
+
 main =
-  Browser.sandbox { init = init, update = update, view = view }
+    Browser.sandbox { init = init, update = update, view = view }
+
+
 
 -- MODEL
 
-type alias Model = { length: Int, posX: Int, posY: Int }
+
+type alias Model =
+    { snake : Snake }
+
 
 init : Model
-init = {
-  length = 4
-  , posX = 15
-  , posY = 15 
-  }
+init =
+    { snake = initialSnake
+    }
+
 
 
 -- UPDATE
 
-type Msg = Increment | Decrement
+
+type Msg
+    = Increment
+    | Decrement
+
 
 update : Msg -> Model -> Model
 update msg model =
-  case msg of
-    Increment -> { model | length = model.length + 1 }
-    Decrement -> { model | length = model.length - 1 }
+    case msg of
+        Increment ->
+            { model | snake = { health = model.snake.health + 1, positions = [] } }
+
+        Decrement ->
+            { model | snake = { health = model.snake.health - 1, positions = [] } }
+
+
 
 -- VIEW
+
+
 view : Model -> Html Msg
 view model =
-  div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem" ]
-    [ 
-    div [] [ text (String.fromInt model.length) ]
-    ]
+    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem" ]
+        []
