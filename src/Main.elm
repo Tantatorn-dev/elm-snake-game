@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Entity.Entity exposing (Snake, initialSnake)
-import Html exposing (Html, div, text)
+import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 
 
@@ -50,8 +50,15 @@ update msg model =
 
 -- VIEW
 
+cell : Int -> Int -> Html Msg
+cell posX posY =
+    div [ style "background" "#32cd32", style "width" "1rem", style "height" "1rem",
+     style "border" "1px solid #fff",
+     style "position" "absolute", 
+     style "left" (String.fromInt posX ++ "rem"), 
+     style "top" (String.fromInt posY ++ "rem") ] [ ]
 
 view : Model -> Html Msg
 view model =
-    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem" ]
-        []
+    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
+        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
