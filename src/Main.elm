@@ -1,9 +1,10 @@
 module Main exposing (..)
 
 import Browser
-import Entity.Entity exposing (Snake, initialSnake)
+import Entity.Entity exposing (Snake, initialSnake, moveHead)
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
+import Time
 
 
 
@@ -11,7 +12,7 @@ import Html.Attributes exposing (style)
 
 
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.element { init = init, update = update, view = view, subscriptions = subscriptions }
 
 
 
@@ -19,13 +20,17 @@ main =
 
 
 type alias Model =
-    { snake : Snake }
-
-
-init : Model
-init =
-    { snake = initialSnake
+    { 
+        snake : Snake
     }
+
+
+init : () -> (Model, Cmd Msg)
+init _ =
+    (
+        { snake = initialSnake }
+        , Cmd.none
+    )
 
 
 
@@ -35,18 +40,34 @@ init =
 type Msg
     = Increment
     | Decrement
+    | Tick Time.Posix
 
 
-update : Msg -> Model -> Model
+update :  Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Increment ->
-            { model | snake = { health = model.snake.health + 1, positions = [] } }
+            (
+                { model | snake = { health = model.snake.health + 1, positions = [] } },
+                Cmd.none
+            )
 
         Decrement ->
-            { model | snake = { health = model.snake.health - 1, positions = [] } }
+            (
+                { model | snake = { health = model.snake.health - 1, positions = [] } },
+                Cmd.none
+            )
 
-
+        Tick _   ->
+            (
+                { model | snake = { health = model.snake.health, positions = (moveHead model.snake.positions) } },
+                Cmd.none
+            )
+        
+-- SUBSCRIPTIONS
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Time.every 1000 Tick
 
 -- VIEW
 

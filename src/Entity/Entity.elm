@@ -1,4 +1,4 @@
-module Entity.Entity exposing (Position, Snake, initialSnake)
+module Entity.Entity exposing (Position, Snake, initialSnake, moveHead)
 
 
 type alias Position =
@@ -29,3 +29,12 @@ initialSnake =
     { health = 3
     , positions = initSnakePos { x = 15, y = 15 } 3
     }
+
+moveHead : List Position -> List Position
+moveHead pos =
+    case pos of
+        [] ->
+            []
+
+        head :: tail ->
+            { head | x = head.x - 1 } :: tail
