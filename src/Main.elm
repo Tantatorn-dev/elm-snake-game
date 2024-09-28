@@ -1,9 +1,11 @@
 module Main exposing (..)
 
 import Browser
-import Entity.Entity exposing (Snake, initialSnake, moveHead)
+import Browser.Events
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
+import Json.Decode as Decode
+import Snake exposing (Direction(..), Snake, initialSnake, moveHead)
 import Time
 
 
@@ -20,16 +22,14 @@ main =
 
 
 type alias Model =
-    { 
-        snake : Snake
+    { snake : Snake
     }
 
 
-init : () -> (Model, Cmd Msg)
+init : () -> ( Model, Cmd Msg )
 init _ =
-    (
-        { snake = initialSnake }
-        , Cmd.none
+    ( { snake = initialSnake }
+    , Cmd.none
     )
 
 
@@ -38,46 +38,89 @@ init _ =
 
 
 type Msg
-    = Increment
-    | Decrement
-    | Tick Time.Posix
+    = Tick Time.Posix
+    | ChangeDirection Direction
 
 
-update :  Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Increment ->
-            (
-                { model | snake = { health = model.snake.health + 1, positions = [] } },
-                Cmd.none
+        Tick _ ->
+            ( { model
+                | snake =
+                    { health = model.snake.health
+                    , positions = moveHead model.snake.positions model.snake.direction
+                    , direction = Left
+                    }
+              }
+            , Cmd.none
             )
 
-        Decrement ->
-            (
-                { model | snake = { health = model.snake.health - 1, positions = [] } },
-                Cmd.none
+        ChangeDirection direction ->
+            ( { model
+                | snake =
+                    { health = model.snake.health
+                    , positions = model.snake.positions
+                    , direction = direction
+                    }
+              }
+            , Cmd.none
             )
 
-        Tick _   ->
-            (
-                { model | snake = { health = model.snake.health, positions = (moveHead model.snake.positions) } },
-                Cmd.none
-            )
-        
+
+
 -- SUBSCRIPTIONS
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Time.every 1000 Tick
+    Sub.batch
+        [ Time.every 1000 Tick
+        , Browser.Events.onKeyDown keyDecoder
+        ]
+
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map toDirection (Decode.field "key" Decode.string)
+
+
+toDirection : String -> Msg
+toDirection str =
+    case str of
+        "ArrowUp" ->
+            ChangeDirection Up
+
+        "ArrowDown" ->
+            ChangeDirection Down
+
+        "ArrowLeft" ->
+            ChangeDirection Left
+
+        "ArrowRight" ->
+            ChangeDirection Right
+
+        _ ->
+            ChangeDirection Left
+
+
 
 -- VIEW
 
+
 cell : Int -> Int -> Html Msg
 cell posX posY =
-    div [ style "background" "#32cd32", style "width" "1rem", style "height" "1rem",
-     style "border" "1px solid #fff",
-     style "position" "absolute", 
-     style "left" (String.fromInt posX ++ "rem"), 
-     style "top" (String.fromInt posY ++ "rem") ] [ ]
+    div
+        [ style "background" "#32cd32"
+        , style "width" "1rem"
+        , style "height" "1rem"
+        , style "border" "1px solid #fff"
+        , style "position" "absolute"
+        , style "left" (String.fromInt posX ++ "rem")
+        , style "top" (String.fromInt posY ++ "rem")
+        ]
+        []
+
 
 view : Model -> Html Msg
 view model =
