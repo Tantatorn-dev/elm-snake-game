@@ -39,7 +39,7 @@ init _ =
 
 type Msg
     = Tick Time.Posix
-    | ChangeDirection Direction
+    | ChangeDirection (Maybe Direction)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -50,7 +50,7 @@ update msg model =
                 | snake =
                     { health = model.snake.health
                     , positions = moveHead model.snake.positions model.snake.direction
-                    , direction = Left
+                    , direction = model.snake.direction
                     }
               }
             , Cmd.none
@@ -61,7 +61,7 @@ update msg model =
                 | snake =
                     { health = model.snake.health
                     , positions = model.snake.positions
-                    , direction = direction
+                    , direction = direction |> Maybe.withDefault model.snake.direction
                     }
               }
             , Cmd.none
@@ -89,19 +89,19 @@ toDirection : String -> Msg
 toDirection str =
     case str of
         "ArrowUp" ->
-            ChangeDirection Up
+            ChangeDirection (Just Up)
 
         "ArrowDown" ->
-            ChangeDirection Down
+            ChangeDirection (Just Down)
 
         "ArrowLeft" ->
-            ChangeDirection Left
+            ChangeDirection (Just Left)
 
         "ArrowRight" ->
-            ChangeDirection Right
+            ChangeDirection (Just Right)
 
         _ ->
-            ChangeDirection Left
+            ChangeDirection Nothing
 
 
 
