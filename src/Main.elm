@@ -5,7 +5,7 @@ import Browser.Events
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
-import Snake exposing (Direction(..), Snake, initialSnake, moveHead)
+import Snake exposing (Direction(..), Snake, initialSnake, move)
 import Time
 
 
@@ -47,11 +47,7 @@ update msg model =
     case msg of
         Tick _ ->
             ( { model
-                | snake =
-                    { health = model.snake.health
-                    , positions = moveHead model.snake.positions model.snake.direction
-                    , direction = model.snake.direction
-                    }
+                | snake = move model.snake
               }
             , Cmd.none
             )

@@ -40,14 +40,31 @@ initialSnake =
     }
 
 
-moveHead : List Position -> Direction -> List Position
-moveHead pos dir =
+addNewHead : List Position -> Direction -> List Position
+addNewHead pos dir =
     case pos of
         [] ->
             []
 
-        head :: tail ->
-            { head | x = head.x + directionToDiff dir X, y = head.y + directionToDiff dir Y } :: tail
+        head :: _ ->
+            { head | x = head.x + directionToDiff dir X, y = head.y + directionToDiff dir Y } :: pos
+
+
+shiftBody : List Position -> List Position
+shiftBody pos =
+    case List.reverse pos of
+        [] ->
+            []
+
+        _ :: rest ->
+            List.reverse rest
+
+
+move : Snake -> Snake
+move snake =
+    { snake
+        | positions = shiftBody (addNewHead snake.positions snake.direction)
+    }
 
 
 type Axis
