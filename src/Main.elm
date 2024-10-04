@@ -6,6 +6,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Snake exposing (Direction(..), Snake, initialSnake, move)
+import HUD exposing (hud, GameStatus(..))
 import Time
 
 
@@ -22,13 +23,14 @@ main =
 
 
 type alias Model =
-    { snake : Snake
+    { snake : Snake,
+      status: GameStatus
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { snake = initialSnake }
+    ( { snake = initialSnake, status = Playing }
     , Cmd.none
     )
 
@@ -40,6 +42,7 @@ init _ =
 type Msg
     = Tick Time.Posix
     | ChangeDirection (Maybe Direction)
+    | StopGame
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -47,7 +50,7 @@ update msg model =
     case msg of
         Tick _ ->
             ( { model
-                | snake = move model.snake
+                | snake = if model.status == Playing then move model.snake else model.snake
               }
             , Cmd.none
             )
@@ -63,13 +66,17 @@ update msg model =
             , Cmd.none
             )
 
+        StopGame ->
+            ( { model | status = model.status |> \status -> if status == Playing then Paused else Playing }
+            , Cmd.none
+            )
 
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ Time.every 1000 Tick
         , Browser.Events.onKeyDown keyDecoder
@@ -96,6 +103,9 @@ toDirection str =
         "ArrowRight" ->
             ChangeDirection (Just Right)
 
+        " " ->
+            StopGame
+
         _ ->
             ChangeDirection Nothing
 
@@ -117,8 +127,12 @@ cell posX posY =
         ]
         []
 
+board : Model -> Html Msg
+board model =
+    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
+        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
 
 view : Model -> Html Msg
 view model =
-    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
+    div [ style "display" "flex", style "flex-direction" "column", style "width" "30rem" ]
+        [ board model, hud { health = model.snake.health, status = model.status } ]
