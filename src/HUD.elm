@@ -4,6 +4,7 @@ import Html.Attributes exposing (style)
 
 type GameStatus
     = Playing
+    | Paused
     | GameOver
 
 statusText : GameStatus -> String
@@ -14,6 +15,9 @@ statusText status =
 
         GameOver ->
            "Game Over"
+
+        Paused ->
+           "Paused"
 
 type alias HUDInfo =
     { health : Int,

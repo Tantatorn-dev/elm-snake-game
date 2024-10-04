@@ -42,6 +42,7 @@ init _ =
 type Msg
     = Tick Time.Posix
     | ChangeDirection (Maybe Direction)
+    | StopGame
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -49,7 +50,7 @@ update msg model =
     case msg of
         Tick _ ->
             ( { model
-                | snake = move model.snake
+                | snake = if model.status == Playing then move model.snake else model.snake
               }
             , Cmd.none
             )
@@ -65,6 +66,10 @@ update msg model =
             , Cmd.none
             )
 
+        StopGame ->
+            ( { model | status = model.status |> \status -> if status == Playing then Paused else Playing }
+            , Cmd.none
+            )
 
 
 -- SUBSCRIPTIONS
@@ -97,6 +102,9 @@ toDirection str =
 
         "ArrowRight" ->
             ChangeDirection (Just Right)
+
+        " " ->
+            StopGame
 
         _ ->
             ChangeDirection Nothing
