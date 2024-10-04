@@ -6,6 +6,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Snake exposing (Direction(..), Snake, initialSnake, move)
+import HUD exposing (hud, GameStatus(..))
 import Time
 
 
@@ -22,13 +23,14 @@ main =
 
 
 type alias Model =
-    { snake : Snake
+    { snake : Snake,
+      status: GameStatus
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { snake = initialSnake }
+    ( { snake = initialSnake, status = Playing }
     , Cmd.none
     )
 
@@ -69,7 +71,7 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.batch
         [ Time.every 1000 Tick
         , Browser.Events.onKeyDown keyDecoder
@@ -117,8 +119,12 @@ cell posX posY =
         ]
         []
 
+board : Model -> Html Msg
+board model =
+    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
+        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
 
 view : Model -> Html Msg
 view model =
-    div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
+    div [ style "display" "flex", style "flex-direction" "column", style "width" "30rem" ]
+        [ board model, hud { health = model.snake.health, status = model.status } ]
