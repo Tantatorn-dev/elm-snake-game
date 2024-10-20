@@ -1,4 +1,5 @@
 module Snake exposing (..)
+import Common exposing (Position)
 
 
 type Direction
@@ -6,13 +7,6 @@ type Direction
     | Down
     | Left
     | Right
-
-
-type alias Position =
-    { x : Int
-    , y : Int
-    }
-
 
 type alias Snake =
     { health : Int

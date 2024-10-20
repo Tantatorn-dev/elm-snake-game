@@ -8,6 +8,7 @@ import Json.Decode as Decode
 import Snake exposing (Direction(..), Snake, initialSnake, move)
 import HUD exposing (hud, GameStatus(..))
 import Time
+import Common exposing (CellType(..), cellColor)
 
 
 
@@ -114,10 +115,10 @@ toDirection str =
 -- VIEW
 
 
-cell : Int -> Int -> Html Msg
-cell posX posY =
+cell : CellType -> Int -> Int -> Html Msg
+cell cellType posX posY =
     div
-        [ style "background" "#32cd32"
+        [ style "background" (cellColor cellType)
         , style "width" "1rem"
         , style "height" "1rem"
         , style "border" "1px solid #fff"
@@ -130,7 +131,7 @@ cell posX posY =
 board : Model -> Html Msg
 board model =
     div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
+        (List.map (\pos -> cell SnakeCell pos.x pos.y) model.snake.positions)
 
 view : Model -> Html Msg
 view model =
