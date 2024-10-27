@@ -7,8 +7,10 @@ import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Snake exposing (Direction(..), Snake, initialSnake, move)
 import HUD exposing (hud, GameStatus(..))
+import Apple exposing (Apple)
 import Time
-import Common exposing (CellType(..), cellColor)
+import Common exposing (CellType(..), cellColor, isCollision)
+import Apple exposing (regenerateApple)
 
 
 
@@ -25,13 +27,15 @@ main =
 
 type alias Model =
     { snake : Snake,
-      status: GameStatus
+      status: GameStatus,
+      apple : Apple
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { snake = initialSnake, status = Playing }
+    ( { snake = initialSnake, apple = { position = { x = 10, y = 10 } }
+    , status = Playing }
     , Cmd.none
     )
 
@@ -50,8 +54,11 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
-            ( { model
-                | snake = if model.status == Playing then move model.snake else model.snake
+            ( {   
+                  status = model.status,
+                  snake = if model.status == Playing then move model.snake else model.snake,
+                  apple = if isCollision (List.head model.snake.positions |> 
+                    Maybe.withDefault { x = 0, y = 0 }) model.apple.position then regenerateApple model.apple else model.apple
               }
             , Cmd.none
             )
@@ -131,7 +138,8 @@ cell cellType posX posY =
 board : Model -> Html Msg
 board model =
     div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        (List.map (\pos -> cell SnakeCell pos.x pos.y) model.snake.positions)
+        ([ cell AppleCell model.apple.position.x model.apple.position.y ] ++
+        (List.map (\pos -> cell SnakeCell pos.x pos.y) model.snake.positions))
 
 view : Model -> Html Msg
 view model =
