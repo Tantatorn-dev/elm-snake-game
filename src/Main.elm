@@ -69,9 +69,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         
-        -- Move the snake every second
+        -- Move the snake every second if the game is not paused
         Tick _ ->
-            if isAppleEaten model.apple model.snake then update AppleEaten {   
+            if model.status == Paused then 
+                ( model 
+                , Cmd.none
+                )
+            -- If the snake collides with the apple, grow the snake and regenerate the apple
+            else if isAppleEaten model.apple model.snake then update AppleEaten {   
               model | snake = move model.snake
               }
             else ({model | snake = move model.snake}, Cmd.none)
