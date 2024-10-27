@@ -54,27 +54,24 @@ isAppleCollideWithSnake : Apple -> Snake -> Bool
 isAppleCollideWithSnake apple snake =
     isCollision apple.position (List.head snake.positions |> Maybe.withDefault { x = 0, y = 0 })
 
-postProcessSnake : Apple -> Snake -> Snake
-postProcessSnake apple snake =
-    if isAppleCollideWithSnake apple snake then
-        grow snake
+postProcess : Model -> Model
+postProcess model =
+    if isAppleCollideWithSnake model.apple model.snake then
+        { 
+            snake = grow model.snake,
+            apple = regenerateApple model.apple,
+            status = model.status
+         }
     else
-        snake
+        model
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick _ ->
             ( {   
-                  status = model.status,
-
-                  snake = if model.status == Playing then 
-                  move model.snake |> postProcessSnake model.apple 
-                  else model.snake,
-
-                  apple = if isAppleCollideWithSnake model.apple model.snake then 
-                  regenerateApple model.apple else model.apple
-              }
+               model | snake = move model.snake
+              } |> postProcess
             , Cmd.none
             )
 
