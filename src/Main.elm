@@ -10,8 +10,9 @@ import HUD exposing (hud, GameStatus(..))
 import Apple exposing (Apple)
 import Time
 import Common exposing (CellType(..), cellColor, isCollision)
-import Apple exposing (regenerateApple)
+import Apple exposing (Apple)
 import Snake exposing (grow)
+import Random
 
 
 
@@ -49,31 +50,31 @@ type Msg
     = Tick Time.Posix
     | ChangeDirection (Maybe Direction)
     | StopGame
+    | AppleEaten
+    | RegenerateApple (Int, Int)
 
-isAppleCollideWithSnake : Apple -> Snake -> Bool
-isAppleCollideWithSnake apple snake =
+isAppleEaten : Apple -> Snake -> Bool
+isAppleEaten apple snake =
     isCollision apple.position (List.head snake.positions |> Maybe.withDefault { x = 0, y = 0 })
 
-postProcess : Model -> Model
-postProcess model =
-    if isAppleCollideWithSnake model.apple model.snake then
-        { 
-            snake = grow model.snake,
-            apple = regenerateApple model.apple,
-            status = model.status
-         }
-    else
-        model
+onAppleEaten : Model -> Model
+onAppleEaten model = {model | snake = grow model.snake}
+
+randomApple : Cmd Msg
+randomApple =
+    Random.generate RegenerateApple (Random.pair (Random.int 1 30) (Random.int 1 30))
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        
+        -- Move the snake every second
         Tick _ ->
-            ( {   
-               model | snake = move model.snake
-              } |> postProcess
-            , Cmd.none
-            )
+            if isAppleEaten model.apple model.snake then update AppleEaten {   
+              model | snake = move model.snake
+              }
+            else ({model | snake = move model.snake}, Cmd.none)
 
         ChangeDirection direction ->
             ( { model
@@ -88,6 +89,18 @@ update msg model =
 
         StopGame ->
             ( { model | status = model.status |> \status -> if status == Playing then Paused else Playing }
+            , Cmd.none
+            )
+
+        AppleEaten ->
+            ( onAppleEaten model
+            , Random.generate RegenerateApple (Random.pair (Random.int 4 28) (Random.int 4 28))
+            )
+
+        RegenerateApple (x, y) ->
+            ( { model | apple = {
+                position = { x = x, y = y }
+            } }
             , Cmd.none
             )
 
