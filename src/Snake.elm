@@ -1,4 +1,5 @@
 module Snake exposing (..)
+import Common exposing (Position)
 
 
 type Direction
@@ -6,13 +7,6 @@ type Direction
     | Down
     | Left
     | Right
-
-
-type alias Position =
-    { x : Int
-    , y : Int
-    }
-
 
 type alias Snake =
     { health : Int
@@ -66,6 +60,13 @@ move snake =
         | positions = shiftBody (addNewHead snake.positions snake.direction)
     }
 
+grow : Snake -> Snake
+grow snake =
+    { 
+       direction = snake.direction,
+       positions = addNewHead snake.positions snake.direction,
+       health = snake.health + 1
+    }
 
 type Axis
     = X

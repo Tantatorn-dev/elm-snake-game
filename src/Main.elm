@@ -7,7 +7,12 @@ import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Snake exposing (Direction(..), Snake, initialSnake, move)
 import HUD exposing (hud, GameStatus(..))
+import Apple exposing (Apple)
 import Time
+import Common exposing (CellType(..), cellColor, isCollision)
+import Apple exposing (Apple)
+import Snake exposing (grow)
+import Random
 
 
 
@@ -24,13 +29,15 @@ main =
 
 type alias Model =
     { snake : Snake,
-      status: GameStatus
+      status: GameStatus,
+      apple : Apple
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { snake = initialSnake, status = Playing }
+    ( { snake = initialSnake, apple = { position = { x = 10, y = 10 } }
+    , status = Playing }
     , Cmd.none
     )
 
@@ -43,17 +50,36 @@ type Msg
     = Tick Time.Posix
     | ChangeDirection (Maybe Direction)
     | StopGame
+    | AppleEaten
+    | RegenerateApple (Int, Int)
+
+isAppleEaten : Apple -> Snake -> Bool
+isAppleEaten apple snake =
+    isCollision apple.position (List.head snake.positions |> Maybe.withDefault { x = 0, y = 0 })
+
+onAppleEaten : Model -> Model
+onAppleEaten model = {model | snake = grow model.snake}
+
+randomApple : Cmd Msg
+randomApple =
+    Random.generate RegenerateApple (Random.pair (Random.int 1 30) (Random.int 1 30))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        
+        -- Move the snake every second if the game is not paused
         Tick _ ->
-            ( { model
-                | snake = if model.status == Playing then move model.snake else model.snake
+            if model.status == Paused then 
+                ( model 
+                , Cmd.none
+                )
+            -- If the snake collides with the apple, grow the snake and regenerate the apple
+            else if isAppleEaten model.apple model.snake then update AppleEaten {   
+              model | snake = move model.snake
               }
-            , Cmd.none
-            )
+            else ({model | snake = move model.snake}, Cmd.none)
 
         ChangeDirection direction ->
             ( { model
@@ -68,6 +94,18 @@ update msg model =
 
         StopGame ->
             ( { model | status = model.status |> \status -> if status == Playing then Paused else Playing }
+            , Cmd.none
+            )
+
+        AppleEaten ->
+            ( onAppleEaten model
+            , Random.generate RegenerateApple (Random.pair (Random.int 4 28) (Random.int 4 28))
+            )
+
+        RegenerateApple (x, y) ->
+            ( { model | apple = {
+                position = { x = x, y = y }
+            } }
             , Cmd.none
             )
 
@@ -114,10 +152,10 @@ toDirection str =
 -- VIEW
 
 
-cell : Int -> Int -> Html Msg
-cell posX posY =
+cell : CellType -> Int -> Int -> Html Msg
+cell cellType posX posY =
     div
-        [ style "background" "#32cd32"
+        [ style "background" (cellColor cellType)
         , style "width" "1rem"
         , style "height" "1rem"
         , style "border" "1px solid #fff"
@@ -130,7 +168,8 @@ cell posX posY =
 board : Model -> Html Msg
 board model =
     div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        (List.map (\pos -> cell pos.x pos.y) model.snake.positions)
+        (cell AppleCell model.apple.position.x model.apple.position.y ::
+        (List.map (\pos -> cell SnakeCell pos.x pos.y) model.snake.positions))
 
 view : Model -> Html Msg
 view model =
