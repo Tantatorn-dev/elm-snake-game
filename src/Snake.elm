@@ -60,6 +60,11 @@ move snake =
         | positions = shiftBody (addNewHead snake.positions snake.direction)
     }
 
+grow : Snake -> Snake
+grow snake =
+    { snake
+        | health = snake.health + 1
+    }
 
 type Axis
     = X

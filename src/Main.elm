@@ -49,6 +49,9 @@ type Msg
     | ChangeDirection (Maybe Direction)
     | StopGame
 
+isAppleCollideWithSnake : Apple -> Snake -> Bool
+isAppleCollideWithSnake apple snake =
+    isCollision apple.position (List.head snake.positions |> Maybe.withDefault { x = 0, y = 0 })
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -57,8 +60,8 @@ update msg model =
             ( {   
                   status = model.status,
                   snake = if model.status == Playing then move model.snake else model.snake,
-                  apple = if isCollision (List.head model.snake.positions |> 
-                    Maybe.withDefault { x = 0, y = 0 }) model.apple.position then regenerateApple model.apple else model.apple
+                  apple = if isAppleCollideWithSnake model.apple model.snake then 
+                  regenerateApple model.apple else model.apple
               }
             , Cmd.none
             )
@@ -138,7 +141,7 @@ cell cellType posX posY =
 board : Model -> Html Msg
 board model =
     div [ style "background" "#d3d3d3", style "width" "30rem", style "height" "30rem", style "position" "relative" ]
-        ([ cell AppleCell model.apple.position.x model.apple.position.y ] ++
+        (cell AppleCell model.apple.position.x model.apple.position.y ::
         (List.map (\pos -> cell SnakeCell pos.x pos.y) model.snake.positions))
 
 view : Model -> Html Msg
