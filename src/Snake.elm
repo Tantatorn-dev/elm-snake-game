@@ -62,8 +62,10 @@ move snake =
 
 grow : Snake -> Snake
 grow snake =
-    { snake
-        | health = snake.health + 1
+    { 
+       direction = snake.direction,
+       positions = addNewHead snake.positions snake.direction,
+       health = snake.health + 1
     }
 
 type Axis
